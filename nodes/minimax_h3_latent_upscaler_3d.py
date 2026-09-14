@@ -607,7 +607,12 @@ class MinimaxH3LatentUpscaler3D(io.ComfyNode):
                 torch.cuda.empty_cache()
             gc.collect()
 
-        return io.NodeOutput({"samples": out})
+        # Preserve denoise masks and other latent metadata. Segmented H3
+        # continuation may hard-lock the first latent slice; dropping the mask
+        # here would silently unlock it during the 1.5x refinement pass.
+        result = latent.copy()
+        result["samples"] = out
+        return io.NodeOutput(result)
 
 # ==========================================
 # Registration
